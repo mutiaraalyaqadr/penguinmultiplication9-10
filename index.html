@@ -1,0 +1,855 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penguin Jump Multiplication ( 9 & 10 )</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: white;
+  color: #192950;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  text-align: center;
+}
+
+h1 {
+  margin: 12px 0 18px;
+  font-size: clamp(24px, 4vw, 40px);
+}
+
+.game {
+  position: relative;
+  width: min(1200px, 97vw);
+  height: min(650px, 76vh);
+  min-height: 490px;
+  margin: auto;
+  overflow: hidden;
+  border: 3px solid #e4f6ff;
+  background: linear-gradient(#7e82cb, #4d598f);
+  isolation: isolate;
+}
+
+.hud {
+  position: absolute;
+  z-index: 30;
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 1px 2px 3px #303765;
+  pointer-events: none;
+}
+
+.ocean {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  width: 200%;
+  height: 65px;
+  background: repeating-linear-gradient(
+    0deg,
+    #40bce4 0 9px,
+    #87e4fa 9px 17px,
+    #55c7e9 17px 26px
+  );
+  animation: wave 2s linear infinite;
+}
+
+@keyframes wave {
+  to { transform: translateX(-60px); }
+}
+
+.world {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  transition: transform .6s ease-in-out;
+  will-change: transform;
+}
+
+.ice {
+  position: absolute;
+  width: 106px;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 11px 5px 8px;
+  border-bottom: 11px solid #8fc3dc;
+  background: repeating-linear-gradient(
+    65deg,
+    #eaf9ff 0 22px,
+    #d5efff 22px 42px
+  );
+  box-shadow: 0 8px 0 #26376745;
+  color: #45628e;
+  font-size: 27px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ice.option {
+  cursor: pointer;
+  transition: filter .15s;
+}
+
+.ice.option:hover {
+  filter: brightness(1.08);
+}
+
+.ice.correct {
+  background: #b8ffdb;
+  border-color: #55c99a;
+}
+
+.ice.wrong {
+  background: #ffc7d0;
+  border-color: #ed91a2;
+}
+
+/* Penguin */
+.penguin {
+  position: absolute;
+  z-index: 15;
+  width: 64px;
+  height: 96px;
+  left: 0;
+  top: 0;
+  transform-origin: center bottom;
+  transition: left .6s ease, top .6s ease;
+}
+
+.head {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: 42px;
+  height: 40px;
+  border-radius: 50%;
+  background: #30354c;
+}
+
+.eye {
+  position: absolute;
+  top: 13px;
+  width: 7px;
+  height: 9px;
+  background: white;
+  border-radius: 50%;
+}
+
+.eye.left { left: 10px; }
+.eye.right { right: 10px; }
+
+.beak {
+  position: absolute;
+  z-index: 2;
+  top: 24px;
+  left: 26px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid #ffb52c;
+}
+
+.body {
+  position: absolute;
+  bottom: 0;
+  left: 6px;
+  width: 54px;
+  height: 69px;
+  border-radius: 48% 48% 45% 45%;
+  background: #30354c;
+  box-shadow: inset -7px -3px #171d35;
+}
+
+.belly {
+  position: absolute;
+  bottom: 2px;
+  left: 7px;
+  width: 39px;
+  height: 50px;
+  border-radius: 50%;
+  background: #fff5d9;
+}
+
+.foot {
+  position: absolute;
+  bottom: -2px;
+  width: 24px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ffb52c;
+}
+
+.foot.left { left: 1px; }
+.foot.right { right: 1px; }
+
+.penguin.jumping {
+  animation: jump .6s ease-in-out;
+}
+
+@keyframes jump {
+  0%   { margin-top: 0; }
+  38%  { margin-top: -100px; }
+  70%  { margin-top: -45px; }
+  100% { margin-top: 0; }
+}
+
+.penguin.falling {
+  transition: top .8s ease-in, transform .8s ease-in;
+  transform: rotate(35deg);
+}
+
+.question {
+  position: absolute;
+  z-index: 25;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 215px;
+  padding: 7px 22px;
+  color: white;
+  font-size: 35px;
+  font-weight: bold;
+  background: linear-gradient(#a07ac6, #8616ad);
+  border: 2px solid #32104c;
+  box-shadow: 0 4px #33164b;
+}
+
+.message {
+  display: none;
+  position: absolute;
+  z-index: 26;
+  top: 43%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 90%;
+  padding: 12px 18px;
+  border-radius: 12px;
+  color: white;
+  background: #202957ed;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.finish {
+  position: absolute;
+  width: 130px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid white;
+  border-radius: 8px;
+  background: repeating-conic-gradient(
+    white 0 25%,
+    #22294f 0 50%
+  ) 0 / 30px 30px;
+}
+
+.finish span {
+  padding: 10px 4px;
+  background: #218a61;
+  border-radius: 8px;
+  color: white;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.overlay {
+  display: none;
+  position: absolute;
+  z-index: 40;
+  inset: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  background: #693971f0;
+}
+
+.overlay h2 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 44px);
+}
+
+.overlay p { margin: 3px; }
+
+button {
+  margin: 14px;
+  padding: 11px 24px;
+  border: 0;
+  border-radius: 12px;
+  background: #a07ac6;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.help {
+  color: #596482;
+  font-size: 14px;
+  padding: 0 12px;
+}
+
+@media(max-width: 600px) {
+  .game { height: 520px; }
+
+  .ice {
+    width: 86px;
+    height: 65px;
+    font-size: 23px;
+  }
+
+  .question {
+    min-width: 180px;
+    font-size: 28px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Penguin Jump Multiplication ( 9 & 10 )</h1>
+
+<div class="game" id="game">
+  <div class="ocean">
+    <div class="wave"></div>
+  </div>
+
+  <div class="hud">
+    <span id="score">Skor: 0</span>
+    <span id="progress">Soal: 1 / 10</span>
+  </div>
+
+  <div class="world" id="world">
+    <div id="platforms"></div>
+
+    <div class="penguin" id="penguin">
+      <div class="head">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+      </div>
+      <div class="beak"></div>
+      <div class="body">
+        <div class="belly"></div>
+      </div>
+      <div class="foot left"></div>
+      <div class="foot right"></div>
+    </div>
+  </div>
+
+  <div class="question" id="question">9 × 1</div>
+  <div class="message" id="message"></div>
+
+  <div class="overlay" id="gameover">
+    <h2>BYURRR!💦</h2>
+    <p>Jawaban salah, penguin jatuh ke air!</p>
+    <p id="finalScore"></p>
+    <button onclick="startGame()">Main Lagi</button>
+  </div>
+
+  <div class="overlay" id="victory">
+    <h2>FINISH!🏆</h2>
+    <p>Penguin berhasil melewati 10 soal!</p>
+    <p id="winScore"></p>
+    <button onclick="startGame()">Main Lagi</button>
+  </div>
+</div>
+
+<button onclick="startGame()">Main Lagi</button>
+
+<p class="help">
+  Pilih jawaban yang benar agar penguin melompat ke es berikutnya sampai FINISH!
+</p>
+
+<script>
+const game = document.getElementById("game");
+const world = document.getElementById("world");
+const platforms = document.getElementById("platforms");
+const penguin = document.getElementById("penguin");
+const questionBox = document.getElementById("question");
+const message = document.getElementById("message");
+const scoreBox = document.getElementById("score");
+const progressBox = document.getElementById("progress");
+const gameover = document.getElementById("gameover");
+const victory = document.getElementById("victory");
+
+const TOTAL = 10;
+const START_X = 100;
+const START_Y = 420;
+const ICE_W = 106;
+
+let stage = 0;
+let score = 0;
+let locked = false;
+let playerX = START_X;
+let playerY = START_Y;
+let cameraX = 0;
+let timers = [];
+let currentOptions = [];
+let lastIce = null;
+
+/* =====================================
+   SUARA GAME - DIBUAT LANGSUNG DENGAN JS
+===================================== */
+
+let audioCtx = null;
+
+function initAudio() {
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) return;
+
+  if (!audioCtx) {
+    audioCtx = new AudioContextClass();
+  }
+
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+// Suara boing
+function playJumpSound() {
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+
+  // Nada utama yang naik lalu turun
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(260, now);
+  osc.frequency.exponentialRampToValueAtTime(720, now + 0.12);
+  osc.frequency.exponentialRampToValueAtTime(380, now + 0.32);
+
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.035);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(now);
+  osc.stop(now + 0.38);
+
+  // Nada kecil
+  const pop = audioCtx.createOscillator();
+  const popGain = audioCtx.createGain();
+
+  pop.type = "triangle";
+  pop.frequency.setValueAtTime(620, now);
+  pop.frequency.exponentialRampToValueAtTime(950, now + 0.07);
+
+  popGain.gain.setValueAtTime(0.16, now);
+  popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+  pop.connect(popGain);
+  popGain.connect(audioCtx.destination);
+
+  pop.start(now);
+  pop.stop(now + 0.11);
+}
+
+// Suara air byurrr
+function playSplashSound() {
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+
+  // Bunyi percikan air
+  const duration = 0.75;
+  const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+  const buffer = audioCtx.createBuffer(
+    1, bufferSize, audioCtx.sampleRate
+  );
+
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(1800, now);
+  filter.frequency.exponentialRampToValueAtTime(350, now + duration);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.65, now + 0.07);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  noise.start(now);
+  noise.stop(now + duration);
+
+  // Nada rendah efek cebur
+  const thump = audioCtx.createOscillator();
+  const thumpGain = audioCtx.createGain();
+
+  thump.type = "sine";
+  thump.frequency.setValueAtTime(170, now);
+  thump.frequency.exponentialRampToValueAtTime(48, now + 0.3);
+
+  thumpGain.gain.setValueAtTime(0.45, now);
+  thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+  thump.connect(thumpGain);
+  thumpGain.connect(audioCtx.destination);
+
+  thump.start(now);
+  thump.stop(now + 0.34);
+}
+
+
+function later(fn, delay) {
+  const id = setTimeout(fn, delay);
+  timers.push(id);
+  return id;
+}
+
+function clearTimers() {
+  timers.forEach(clearTimeout);
+  timers = [];
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function makeOptions(correct) {
+  const values = [correct];
+
+  while (values.length < 3) {
+    const table = Math.random() < 0.5 ? 9 : 10;
+    const multiplier = Math.floor(Math.random() * 10) + 1;
+    const value = table * multiplier;
+
+    if (!values.includes(value)) {
+      values.push(value);
+    }
+  }
+
+  return shuffle(values);
+}
+
+function createIce(x, y, value, type = "") {
+  const ice = document.createElement("div");
+  ice.className = "ice " + type;
+  ice.style.left = x + "px";
+  ice.style.top = y + "px";
+
+  if (value !== null && value !== undefined && value !== "") {
+    ice.textContent = value;
+  }
+
+  platforms.appendChild(ice);
+  return ice;
+}
+
+function setPlayer(x, surfaceY) {
+  playerX = x;
+  playerY = surfaceY;
+  penguin.style.left = x + "px";
+  penguin.style.top = (surfaceY - 96) + "px";
+}
+
+function moveCamera() {
+  const viewportWidth = game.clientWidth;
+  cameraX = Math.max(0, playerX - viewportWidth * 0.18);
+  world.style.transform = `translateX(${-cameraX}px)`;
+}
+
+function makeNextOptions() {
+  currentOptions.forEach(ice => ice.remove());
+  currentOptions = [];
+
+  const a = Math.random() < 0.5 ? 9 : 10;
+  const b = Math.floor(Math.random() * 10) + 1;
+  const correct = a * b;
+  const values = makeOptions(correct);
+
+  const viewportWidth = game.clientWidth;
+  const gap = Math.min(
+    180,
+    Math.max(100, (viewportWidth - 240) / 2)
+  );
+
+  const firstX = playerX + 110;
+
+  const positions = [
+    firstX,
+    firstX + gap,
+    firstX + gap * 2
+  ];
+
+  const heights = [
+    START_Y - 15,
+    START_Y + 8,
+    START_Y - 10
+  ];
+
+  const row = {
+    a,
+    b,
+    correct,
+    blocks: []
+  };
+
+  values.forEach((value, index) => {
+    const ice = createIce(
+      positions[index],
+      heights[index],
+      value,
+      "option"
+    );
+
+    row.blocks.push(ice);
+    currentOptions.push(ice);
+
+    ice.addEventListener("click", () => {
+      if (!locked && stage < TOTAL) {
+        chooseAnswer(ice, value, row);
+      }
+    });
+  });
+
+  questionBox.textContent = `${a} × ${b}`;
+  progressBox.textContent = `Soal: ${stage + 1} / ${TOTAL}`;
+  message.style.display = "none";
+
+  const left = positions[0];
+  const right = positions[2] + ICE_W;
+  const groupWidth = right - left;
+
+  if (groupWidth <= viewportWidth - 30) {
+    const desiredCamera = playerX - viewportWidth * 0.18;
+    const minCamera = Math.max(0, right - viewportWidth + 20);
+    const maxCamera = Math.max(0, left - 20);
+
+    cameraX = Math.max(
+      minCamera,
+      Math.min(desiredCamera, maxCamera)
+    );
+
+    world.style.transform = `translateX(${-cameraX}px)`;
+  } else {
+    cameraX = Math.max(0, left - 20);
+    world.style.transform = `translateX(${-cameraX}px)`;
+  }
+
+  return row;
+}
+
+function showQuestion() {
+  if (stage >= TOTAL) {
+    finishGame();
+    return;
+  }
+
+  makeNextOptions();
+  locked = false;
+}
+
+function chooseAnswer(ice, value, row) {
+  if (locked) return;
+  locked = true;
+
+  row.blocks.forEach(block => {
+    block.style.pointerEvents = "none";
+  });
+
+  // JAWABAN SALAH
+  if (value !== row.correct) {
+    ice.classList.add("wrong");
+
+    message.textContent = "😱 Salah! Penguin kecemplung!";
+    message.style.display = "block";
+
+    playSplashSound();
+
+    penguin.classList.add("falling");
+    penguin.style.top = (playerY + 160) + "px";
+
+    later(() => {
+      document.getElementById("finalScore").textContent =
+        `Skor akhir: ${score}`;
+
+      gameover.style.display = "flex";
+    }, 850);
+
+    return;
+  }
+
+  // JAWABAN BENAR
+  ice.classList.add("correct");
+
+  score += 10;
+  scoreBox.textContent = `Skor: ${score}`;
+
+  message.textContent = "Benar🎉 Melompat ke es!";
+  message.style.display = "block";
+
+  // Suara loncat
+  playJumpSound();
+
+  const targetX = parseFloat(ice.style.left);
+  const targetY = parseFloat(ice.style.top);
+
+  const landingX = targetX + (ICE_W - 64) / 2;
+  const landingY = targetY;
+
+  penguin.classList.remove("jumping");
+  void penguin.offsetWidth;
+  penguin.classList.add("jumping");
+
+  penguin.style.left = landingX + "px";
+  penguin.style.top = (landingY - 96) + "px";
+
+  later(() => {
+    penguin.classList.remove("jumping");
+    setPlayer(landingX, landingY);
+
+  
+    row.blocks.forEach(block => {
+      if (block !== ice) block.remove();
+    });
+
+    ice.classList.remove("option");
+    ice.classList.add("correct");
+
+    currentOptions = [];
+    lastIce = ice;
+    stage++;
+
+    if (stage >= TOTAL) {
+      progressBox.textContent = `Soal: ${TOTAL} / ${TOTAL}`;
+      questionBox.textContent = "🏁 FINISH!";
+
+      const finish = document.createElement("div");
+      finish.className = "finish";
+      finish.style.left = (playerX + 160) + "px";
+      finish.style.top = (START_Y - 100) + "px";
+      finish.innerHTML = "<span>🏁 FINISH 🏁</span>";
+      platforms.appendChild(finish);
+
+      cameraX = Math.max(
+        0,
+        parseFloat(finish.style.left) + 130 -
+        game.clientWidth + 25
+      );
+
+      world.style.transform = `translateX(${-cameraX}px)`;
+
+      penguin.style.left =
+        (parseFloat(finish.style.left) + 33) + "px";
+
+      penguin.style.top =
+        (parseFloat(finish.style.top) + 94) + "px";
+
+      later(finishGame, 900);
+      return;
+    }
+
+    moveCamera();
+    later(showQuestion, 250);
+
+  }, 620);
+}
+
+function finishGame() {
+  locked = true;
+  message.style.display = "none";
+  questionBox.style.display = "none";
+
+  document.getElementById("winScore").textContent =
+    `Skor akhir: ${score}`;
+
+  victory.style.display = "flex";
+}
+
+function startGame() {
+
+  initAudio();
+  clearTimers();
+
+  stage = 0;
+  score = 0;
+  locked = false;
+  playerX = START_X;
+  playerY = START_Y;
+  cameraX = 0;
+  currentOptions = [];
+  lastIce = null;
+
+  platforms.innerHTML = "";
+
+  world.style.transition = "none";
+  world.style.transform = "translateX(0)";
+
+  scoreBox.textContent = "Skor: 0";
+  progressBox.textContent = `Soal: 1 / ${TOTAL}`;
+
+  gameover.style.display = "none";
+  victory.style.display = "none";
+  message.style.display = "none";
+  questionBox.style.display = "block";
+
+  penguin.className = "penguin";
+  penguin.style.transform = "none";
+  penguin.style.transition = "left .6s ease, top .6s ease";
+
+  lastIce = createIce(
+    START_X - 20,
+    START_Y,
+    "",
+    "correct"
+  );
+
+  setPlayer(START_X, START_Y);
+
+  requestAnimationFrame(() => {
+    world.style.transition = "transform .6s ease-in-out";
+    showQuestion();
+  });
+}
+
+startGame();
+</script>
+
+</body>
+</html>
